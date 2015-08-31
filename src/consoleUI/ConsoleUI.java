@@ -4,13 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import core.BestTimes;
+import besttimes.BestTimes;
+import besttimes.PlayerTimeDatabaseLoader;
 import core.Field;
 import core.Field.Direction;
-import core.Field.GameState;
-import core.FieldFileLoader;
-import core.PlayerTimeDatabaseLoader;
-import core.WrongFormatException;
+import fileloader.FieldFileLoader;
 
 public class ConsoleUI {
 
@@ -31,7 +29,6 @@ public class ConsoleUI {
 	public ConsoleUI() {
 		databaseLoader = new PlayerTimeDatabaseLoader();
 		fileLoader = new FieldFileLoader();
-		// databaseLoader.createTable(); If you don't have created table yet.
 		if (databaseLoader.load() != null) {
 			this.bestTimes = databaseLoader.load();
 		} else {
@@ -83,23 +80,34 @@ public class ConsoleUI {
 		do {
 			processInput(false);
 			update();
-			field.checkGameState();
-		} while (field.getGameState() == GameState.UNSOLVED);
+		} while (!field.checkGameState());
+		savePlayerTime();
+		createNewField();
+		do {
+			processInput(true);
+		} while (true);
+	}
+	
+	/**
+	 * Saves playerTime and prints best times
+	 */
+	private void savePlayerTime(){
 		time = (System.currentTimeMillis() - time) / 1000;
-
 		System.out.println("YOU WON! Please enter your name");
 		String name = readLine();
 		bestTimes.addPlayerTime(name, (int) time);
 		try {
 			databaseLoader.save(bestTimes);
 		} catch (Exception e) {
-			System.err.println("Something is wrong, best times aren't saved!");
 		}
 		System.out.println(bestTimes.toString());
-		field = new Field(rowCount, columnCount);
-		do {
-			processInput(true);
-		} while (true);
+	}
+	
+	/**
+	 * Creates new game field
+	 */
+	private void createNewField() {
+		this.field = new Field(rowCount, columnCount);
 	}
 
 	/**
@@ -119,23 +127,25 @@ public class ConsoleUI {
 		System.out.println("New - Start new game");
 		if (!won) {
 			System.out.println("W (up), S (down), A (left), D (right) - to move");
-			String input = readLine();
-			try {
-				handleInput(input, false);
-			} catch (WrongFormatException e) {
-				e.printStackTrace();
-				System.err.println(e.getMessage());
-			}
+			checkInput(readLine(), false);
 		} else {
-			String input = readLine();
-			try {
-				handleInput(input, true);
-			} catch (WrongFormatException e) {
-				e.printStackTrace();
-				System.err.println(e.getMessage());
-			}
+			checkInput(readLine(), true);
 		}
+		System.out.println("-----------------------------------------------");
 
+	}
+	
+	/**
+	 * Calls method handleinput and catches exceptions
+	 * @param input
+	 * @param won
+	 */
+	private void checkInput(String input, boolean won) {
+		try {
+			handleInput(input, won);
+		} catch (WrongFormatException e) {
+			System.err.println(e.getMessage());
+		}
 	}
 
 	/**
@@ -152,19 +162,19 @@ public class ConsoleUI {
 			switch (x) {
 			case "W":
 			case "UP":
-				field.move(Direction.UP);
+				field.move(Direction.UP, true);
 				break;
 			case "S":
 			case "DOWN":
-				field.move(Direction.DOWN);
+				field.move(Direction.DOWN, true);
 				break;
 			case "A":
 			case "LEFT":
-				field.move(Direction.LEFT);
+				field.move(Direction.LEFT, true);
 				break;
 			case "D":
 			case "RIGHT":
-				field.move(Direction.RIGHT);
+				field.move(Direction.RIGHT, true);
 				break;
 			case "EXIT":
 				System.out.println();

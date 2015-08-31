@@ -6,16 +6,9 @@ import java.util.Random;
 
 public class Field implements Serializable {
 
-	private Tile[][] tiles;
+	private final Tile[][] tiles;
 	private final int rowCount;
 	private final int columnCount;
-	private int numberCount;
-	private int[] numbers;
-	private GameState gameState;
-
-	public enum GameState {
-		SOLVED, UNSOLVED
-	}
 
 	public enum Direction {
 		UP, DOWN, LEFT, RIGHT
@@ -32,62 +25,56 @@ public class Field implements Serializable {
 		this.rowCount = rowCount;
 		this.columnCount = columnCount;
 		this.tiles = new Tile[rowCount][columnCount];
-		generate();
-		gameState = GameState.UNSOLVED;
+		generateField();
+		shuffleField();
 	}
 
 	/**
-	 * Generates numbers into field
+	 * Fills field with stones and spaces
 	 */
-	private void generate() {
-		setNumbers();
-		int randomNumber = 0;
-		int maxNumber = rowCount * columnCount;
-		for (int row = 0; row < this.rowCount; row++) {
-			for (int column = 0; column < this.columnCount; column++) {
-				randomNumber = getNumber();
-				if (randomNumber == maxNumber) {
-					tiles[row][column] = new Space();
-				} else {
-					tiles[row][column] = new Stone(randomNumber);
-				}
+	private void generateField() {
+		int value = 1;
+		int row = 0;
+		int column = 0;
+		for (row = 0; row < this.rowCount; row++) {
+			for (column = 0; column < this.columnCount; column++) {
+				tiles[row][column] = new Stone(value++);
 			}
 		}
+		tiles[row - 1][column - 1] = new Space();
 	}
 
 	/**
-	 * Sets numbers into numbers array
+	 * Shuffles tiles in field
 	 */
-	private void setNumbers() {
-		this.numberCount = (rowCount * columnCount); // - 1;
-		this.numbers = new int[this.numberCount];
-		for (int i = 0; i < numbers.length; i++) {
-			this.numbers[i] = i + 1;
-		}
-	}
-
-	/**
-	 * Returns number from numbers array and deletes this number form array
-	 * 
-	 * @return
-	 */
-	private int getNumber() {
-		int[] numbers = this.numbers;
+	private void shuffleField() {
 		Random random = new Random();
-		int index = 0;
-		int chosenNumber = 0;
-		int chosenIndex = random.nextInt(this.numberCount);
-		for (int i = 0; i < this.numberCount; i++) {
-			if ((i) == chosenIndex) {
-				chosenNumber = numbers[i];
-				index = i;
+		int index = 2;
+		int previousIndex;
+		for (int i = 0; i < rowCount * columnCount * 10; i++) {
+			previousIndex = index;
+			index = random.nextInt(4);
+			if (index == 0 && previousIndex == 1) {
+				i--;
+				continue;
 			}
+			if (index == 1 && previousIndex == 0) {
+				i--;
+				continue;
+			}
+			if (index == 2 && previousIndex == 3) {
+				i--;
+				continue;
+			}
+			if (index == 3 && previousIndex == 2) {
+				i--;
+				continue;
+			}
+			if (!move(Direction.values()[index], false)) {
+				i--;
+			}
+
 		}
-		for (int i = index; i < this.numberCount - 1; i++) {
-			numbers[i] = numbers[i + 1];
-		}
-		this.numberCount--;
-		return chosenNumber;
 	}
 
 	/**
@@ -95,7 +82,7 @@ public class Field implements Serializable {
 	 * 
 	 * @return
 	 */
-	public Tile getSpace() { // viem, toto by trebalo opravit 
+	public Tile getSpace() {
 		Tile tile = null;
 		for (int row = 0; row < this.rowCount; row++) {
 			for (int column = 0; column < this.columnCount; column++) {
@@ -125,7 +112,7 @@ public class Field implements Serializable {
 	 * @param tile
 	 * @return
 	 */
-	public int getTileRow(Tile tile) { // viem, toto by trebalo opravit 
+	public int getTileRow(Tile tile) {
 		int tileRow = 0;
 		for (int row = 0; row < this.rowCount; row++) {
 			for (int column = 0; column < this.columnCount; column++) {
@@ -143,7 +130,7 @@ public class Field implements Serializable {
 	 * @param tile
 	 * @return
 	 */
-	public int getTileColumn(Tile tile) { // viem, toto by trebalo opravit 
+	public int getTileColumn(Tile tile) {
 		int tileColumn = 0;
 		for (int row = 0; row < this.rowCount; row++) {
 			for (int column = 0; column < this.columnCount; column++) {
@@ -172,7 +159,7 @@ public class Field implements Serializable {
 	 * 
 	 * @param direction
 	 */
-	public void move(Direction direction) {
+	public boolean move(Direction direction, boolean printErrors) {
 		Tile tile1 = getSpace();
 		int row = getTileRow(tile1);
 		int column = getTileColumn(tile1);
@@ -181,49 +168,57 @@ public class Field implements Serializable {
 			if (row + 1 < rowCount) {
 				tile2 = tiles[row + 1][column];
 				swapTiles(tile1, tile2);
+				return true;
 			} else {
-				System.err.println("You can't move here");
+				if (printErrors) {
+					System.err.println("You can't move here");
+				}
+				return false;
 			}
 		}
 		if (direction == Direction.DOWN) {
 			if (row - 1 >= 0) {
 				tile2 = tiles[row - 1][column];
 				swapTiles(tile2, tile1);
+				return true;
 			} else {
-				System.err.println("You can't move here");
+				if (printErrors) {
+					System.err.println("You can't move here");
+				}
+				return false;
 			}
 		}
 		if (direction == Direction.LEFT) {
 			if (column + 1 < columnCount) {
 				tile2 = tiles[row][column + 1];
 				swapTiles(tile1, tile2);
+				return true;
 			} else {
-				System.err.println("You can't move here");
+				if (printErrors) {
+					System.err.println("You can't move here");
+				}
+				return false;
 			}
 		}
 		if (direction == Direction.RIGHT) {
 			if (column - 1 >= 0) {
 				tile2 = tiles[row][column - 1];
 				swapTiles(tile2, tile1);
+				return true;
 			} else {
-				System.err.println("You can't move here");
+				if (printErrors) {
+					System.err.println("You can't move here");
+				}
+				return false;
 			}
 		}
-	}
-
-	/**
-	 * Returns state of game
-	 * 
-	 * @return
-	 */
-	public GameState getGameState() {
-		return this.gameState;
+		return false;
 	}
 
 	/**
 	 * if game is solved, changed game state to solved
 	 */
-	public void checkGameState() {
+	public boolean checkGameState() {
 		int number1 = 0;
 		int number2 = 0;
 		Tile currentTile = null;
@@ -235,13 +230,15 @@ public class Field implements Serializable {
 					if (number2 > number1) {
 						number1 = number2;
 					} else {
-						return;
+						return false;
 					}
 				}
 			}
 		}
 		if (currentTile instanceof Space) {
-			gameState = GameState.SOLVED;
+			return true;
+		} else {
+			return false;
 		}
 	}
 

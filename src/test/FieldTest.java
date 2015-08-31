@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import core.Field;
 import core.Field.Direction;
-import core.Field.GameState;
 
 public class FieldTest {
 	
@@ -28,14 +27,14 @@ public class FieldTest {
 	@Test
 	public void createFieldGameState() {
 		Field field = new Field(rowCount, columnCount);
-		assertEquals(GameState.UNSOLVED, field.getGameState());
+		assertEquals(false, field.checkGameState());
 	}
 	
 	@Test
 	public void moveUp() {
 		Field field = new Field(rowCount, columnCount);
 		for (int i=0; i<rowCount*columnCount; i++){
-			field.move(Direction.UP);
+			field.move(Direction.UP, false);
 		}
 	}
 	
@@ -43,7 +42,7 @@ public class FieldTest {
 	public void moveDown() {
 		Field field = new Field(rowCount, columnCount);
 		for (int i=0; i<rowCount*columnCount; i++){
-			field.move(Direction.DOWN);
+			field.move(Direction.DOWN, false);
 		}
 	}
 	
@@ -51,7 +50,7 @@ public class FieldTest {
 	public void moveLeft() {
 		Field field = new Field(rowCount, columnCount);
 		for (int i=0; i<rowCount*columnCount; i++){
-			field.move(Direction.LEFT);
+			field.move(Direction.LEFT, false);
 		}
 	}
 	
@@ -59,7 +58,7 @@ public class FieldTest {
 	public void moveRight() {
 		Field field = new Field(rowCount, columnCount);
 		for (int i=0; i<rowCount*columnCount; i++){
-			field.move(Direction.RIGHT);
+			field.move(Direction.RIGHT, false);
 		}
 	}
 	
